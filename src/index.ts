@@ -6,7 +6,7 @@ class MarketDataEngine {
     private logger?: winston.Logger;
 
     private websocketServer?: Server;
-
+    
     constructor() {
         // Create logger
         this.logger = winston.createLogger({
@@ -31,13 +31,8 @@ class MarketDataEngine {
         // Create websocket server.
         const port = 8080;
         this.websocketServer = new Server({ port: port });
-        this.websocketServer.on('connection', (ws: WebSocket) => {
-            ws.on('message', (message: string) => {
-                this.logger?.info(`Recevied a message from client: ${message}`);
-            });
-            this.logger?.info(`A client connected. ${ws}`);
-        });
-        
+        this.websocketServer.on('connection', this.onNewConnection);
+
         this.logger?.info(`Market data engine started on ws://localhost:${port}.`)
     }
 
@@ -49,6 +44,15 @@ class MarketDataEngine {
 
         this.logger?.info('Market data engine stopped.')
     }
+
+    private onNewConnection = (socket: WebSocket) => {
+        socket.on('message', this.onMessageReceived.bind);
+        this.logger?.info(`A client connected. ${socket}`);
+    }
+
+    private onMessageReceived = (message: string) => {
+        this.logger?.info(`Recevied a message from client: ${message}`);
+    };
 }
 
 export default MarketDataEngine;
