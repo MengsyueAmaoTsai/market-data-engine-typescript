@@ -1,20 +1,21 @@
 import winston from "winston";
 import { Server, WebSocket } from "ws";
 import { OrderBook, Tick } from "./data";
+import * as crypto from 'crypto';
 
 
 class MarketDataEngine {
     private logger?: winston.Logger;
 
     private websocketServer?: Server;
-    private clients: Set<WebSocket> = new Set();
+    private clients: Map<string, WebSocket> = new Map();
     
     constructor() {
         // Create logger
         this.logger = this.createLogger();
     }
 
-    public start = () => {
+    public start = (): void => {
         this.logger?.info('Starting market data engine ...');
 
         // Create websocket server.
@@ -25,7 +26,7 @@ class MarketDataEngine {
         this.logger?.info(`Market data engine started on ws://localhost:${port}.`);
     }
 
-    public stop = () => {
+    public stop = (): void => {
         this.logger?.info('Stopping market data engine ...');
 
         // Close websocket server.
@@ -34,18 +35,21 @@ class MarketDataEngine {
         this.logger?.info('Market data engine stopped.');
     }
 
-    private onNewConnection = (socket: WebSocket) => {
-        if (!this.clients.has(socket)) {
-            socket.on('message', this.onMessageReceived);
-            this.clients.add(socket);
-            this.logger?.info(`A client connected. ${Object.keys(socket)}`);
-        } else {
-            this.logger?.info(`Client already exists.`);
-        }
+    private onNewConnection = (socket: WebSocket): void => {
+        const socketId = this.generateUniqueId();
+        this.clients.set(socketId, socket);
+        socket.on('message', (message: string) => this.onMessageReceived(socketId, message));
+        this.logger?.info(`A client connected.`);
     }
 
-    private onMessageReceived = (message: string) => {
-        this.logger?.info(`Recevied a message from client: ${message}`);
+    private onMessageReceived = (id: string, message: string): void => {
+        this.logger?.info(`Recevied a message from client(${id}): ${message}`);
+
+        if (!this.clients.has(id)) {
+            this.logger?.info(`Client with id: ${id} does not exists.`);
+            return;
+        }
+        
         try {
             const request = JSON.parse(message);
             
@@ -78,16 +82,18 @@ class MarketDataEngine {
         });
     }
 
-    private publishTickData = (tick: Tick) => {
+    private publishTickData = (tick: Tick): void => {
         // Get all clients which subscribed this symbol.
         // Broadcast message
     }
 
-    private publishBarData = () => {
+    private publishBarData = (): void => {
     }
 
-    private publishOrderBookData = (orderBook: OrderBook) => {
+    private publishOrderBookData = (orderBook: OrderBook): void => {
     }
+
+    private generateUniqueId = (): string => crypto.randomBytes(16).toString("hex");
 }
 
 
