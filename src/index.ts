@@ -9,20 +9,7 @@ class MarketDataEngine {
     
     constructor() {
         // Create logger
-        this.logger = winston.createLogger({
-            format: winston.format.combine(
-                winston.format.timestamp(),
-                winston.format.printf(info => {
-                    return `${info.timestamp} - [${info.level}] - ${info.message}`
-                }),
-            ),
-            transports: [
-                new winston.transports.Console(),
-                // new winston.transports.File({
-                //     filename: 'logs/engine.log'
-                // }),
-            ]
-        });
+        this.logger = this.createLogger();
     }
 
     public start = () => {
@@ -52,7 +39,45 @@ class MarketDataEngine {
 
     private onMessageReceived = (message: string) => {
         this.logger?.info(`Recevied a message from client: ${message}`);
+        try {
+            const request = JSON.parse(message);
+            
+            switch (request.action) {
+                case 'subscribe':
+                    this.logger?.info(`Subscribe symbol: ${request.symbol}`);
+                    break;
+                case 'unsubscribe':
+                    this.logger?.info(`Unsubscribe symbol: ${request.symbol}`)   
+                default:
+                    this.logger?.info(`Unknown action.`)
+                    // TODO: Send error message to client. 
+            }
+        } catch {
+            // Send error message to client.
+        }
     };
+
+    private createLogger = (): winston.Logger => {
+        return winston.createLogger({
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.printf(info => {
+                    return `${info.timestamp} - [${info.level}] - ${info.message}`
+                }),
+            ),
+            transports: [
+                new winston.transports.Console(),
+            ]
+        });
+    }
+
+    private publishTickData = () => {
+
+    }
+
+    private publishOrderBookData = () => {
+        
+    }
 }
 
 export default MarketDataEngine;
