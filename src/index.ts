@@ -33,8 +33,8 @@ class MarketDataEngine {
     }
 
     private onNewConnection = (socket: WebSocket) => {
-        socket.on('message', this.onMessageReceived.bind);
-        this.logger?.info(`A client connected. ${socket}`);
+        socket.on('message', this.onMessageReceived);
+        this.logger?.info(`A client connected. ${Object.keys(socket)}`);
     }
 
     private onMessageReceived = (message: string) => {
@@ -76,12 +76,12 @@ class MarketDataEngine {
     }
 
     private publishOrderBookData = () => {
-        
+
     }
 }
 
 export default MarketDataEngine;
 
-// const engine = new MarketDataEngine();
-// engine.start();
+const engine = new MarketDataEngine();
+engine.start();
 // engine.stop();
