@@ -7,6 +7,7 @@ class MarketDataEngine {
     private logger?: winston.Logger;
 
     private websocketServer?: Server;
+    private clients: Set<WebSocket> = new Set();
     
     constructor() {
         // Create logger
@@ -35,6 +36,7 @@ class MarketDataEngine {
 
     private onNewConnection = (socket: WebSocket) => {
         socket.on('message', this.onMessageReceived);
+        this.clients.add(socket);
         this.logger?.info(`A client connected. ${Object.keys(socket)}`);
     }
 
