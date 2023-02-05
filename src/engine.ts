@@ -35,9 +35,13 @@ class MarketDataEngine {
     }
 
     private onNewConnection = (socket: WebSocket) => {
-        socket.on('message', this.onMessageReceived);
-        this.clients.add(socket);
-        this.logger?.info(`A client connected. ${Object.keys(socket)}`);
+        if (!this.clients.has(socket)) {
+            socket.on('message', this.onMessageReceived);
+            this.clients.add(socket);
+            this.logger?.info(`A client connected. ${Object.keys(socket)}`);
+        } else {
+            this.logger?.info(`Client already exists.`);
+        }
     }
 
     private onMessageReceived = (message: string) => {
